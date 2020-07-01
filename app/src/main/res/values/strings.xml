@@ -227,5 +227,6 @@ Copyright 2018, The Android Open Source Project
     <string name="pref_tracing_dlg">Debug performance tracing.</string>
 
     <string name="room_id_caption">ROOM ID:</string>
+    <string name="textview">TextView</string>
 
 </resources>

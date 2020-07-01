@@ -43,12 +43,8 @@ Copyright 2018, The Android Open Source Project
         android:orientation="horizontal"
         android:layout_gravity="center|top"
         android:layout_marginTop="32dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
+        android:padding="10dp"
         android:textSize="30sp"
-        android:layout_centerHorizontal="true"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:background="#333333">
@@ -57,7 +53,7 @@ Copyright 2018, The Android Open Source Project
             android:id="@+id/roomID"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TextView" />
+            android:text="@string/textview" />
     </LinearLayout>
 
     <LinearLayout

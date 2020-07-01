@@ -55,28 +55,25 @@ public class RoomParametersFetcher {
     void onSignalingParametersError(final String description);
   }
 
-  public RoomParametersFetcher(
-      String roomUrl, String roomMessage, final RoomParametersFetcherEvents events) {
+  public RoomParametersFetcher(String roomUrl, String roomMessage, final RoomParametersFetcherEvents events) {
     this.roomUrl = roomUrl;
     this.roomMessage = roomMessage;
     this.events = events;
   }
 
   public void makeRequest() {
-    Log.d(TAG, "Connecting to room: " + roomUrl);
-    AsyncHttpURLConnection httpConnection =
-        new AsyncHttpURLConnection("POST", roomUrl, roomMessage, new AsyncHttpEvents() {
-          @Override
-          public void onHttpError(String errorMessage) {
-            Log.e(TAG, "Room connection error: " + errorMessage);
-            events.onSignalingParametersError(errorMessage);
-          }
+    AsyncHttpURLConnection httpConnection = new AsyncHttpURLConnection("POST", roomUrl, roomMessage, new AsyncHttpEvents() {
+      @Override
+      public void onHttpError(String errorMessage) {
+        Log.e(TAG, "Room connection error: " + errorMessage);
+        events.onSignalingParametersError(errorMessage);
+      }
 
-          @Override
-          public void onHttpComplete(String response) {
-            roomHttpResponseParse(response);
-          }
-        });
+      @Override
+      public void onHttpComplete(String response) {
+        roomHttpResponseParse(response);
+      }
+    });
     httpConnection.send();
   }
 

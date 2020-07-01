@@ -57,7 +57,6 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 
   public WebSocketRTCClient(SignalingEvents events) {
     this.events = events;
-    roomState = ConnectionState.NEW;
     final HandlerThread handlerThread = new HandlerThread(TAG);
     handlerThread.start();
     handler = new Handler(handlerThread.getLooper());
@@ -70,12 +69,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   @Override
   public void connectToRoom(RoomConnectionParameters connectionParameters) {
     this.connectionParameters = connectionParameters;
-    handler.post(new Runnable() {
-      @Override
-      public void run() {
-        connectToRoomInternal();
-      }
-    });
+    handler.post(() -> connectToRoomInternal());
   }
 
   @Override
@@ -91,20 +85,14 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 
   // Connects to room - function runs on a local looper thread.
   private void connectToRoomInternal() {
-    String connectionUrl = getConnectionUrl(connectionParameters);
-    Log.d(TAG, "Connect to room: " + connectionUrl);
+    String connectionUrl = connectionParameters.roomUrl + "/" + ROOM_JOIN + "/" + connectionParameters.roomId + getQueryString(connectionParameters);
     roomState = ConnectionState.NEW;
     wsClient = new WebSocketChannelClient(handler, this);
 
     RoomParametersFetcherEvents callbacks = new RoomParametersFetcherEvents() {
       @Override
       public void onSignalingParametersReady(final SignalingParameters params) {
-        WebSocketRTCClient.this.handler.post(new Runnable() {
-          @Override
-          public void run() {
-            WebSocketRTCClient.this.signalingParametersReady(params);
-          }
-        });
+        WebSocketRTCClient.this.handler.post(() -> WebSocketRTCClient.this.signalingParametersReady(params));
       }
 
       @Override
@@ -129,20 +117,12 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
     }
   }
 
-  // Helper functions to get connection, post message and leave message URLs
-  private String getConnectionUrl(RoomConnectionParameters connectionParameters) {
-    return connectionParameters.roomUrl + "/" + ROOM_JOIN + "/" + connectionParameters.roomId
-        + getQueryString(connectionParameters);
-  }
-
-  private String getMessageUrl(
-      RoomConnectionParameters connectionParameters, SignalingParameters signalingParameters) {
+  private String getMessageUrl(RoomConnectionParameters connectionParameters, SignalingParameters signalingParameters) {
     return connectionParameters.roomUrl + "/" + ROOM_MESSAGE + "/" + connectionParameters.roomId
         + "/" + signalingParameters.clientId + getQueryString(connectionParameters);
   }
 
-  private String getLeaveUrl(
-      RoomConnectionParameters connectionParameters, SignalingParameters signalingParameters) {
+  private String getLeaveUrl(RoomConnectionParameters connectionParameters, SignalingParameters signalingParameters) {
     return connectionParameters.roomUrl + "/" + ROOM_LEAVE + "/" + connectionParameters.roomId + "/"
         + signalingParameters.clientId + getQueryString(connectionParameters);
   }

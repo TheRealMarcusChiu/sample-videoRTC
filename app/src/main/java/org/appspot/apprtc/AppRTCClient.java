@@ -28,8 +28,7 @@ public interface AppRTCClient {
     public final String roomId;
     public final boolean loopback;
     public final String urlParameters;
-    public RoomConnectionParameters(
-        String roomUrl, String roomId, boolean loopback, String urlParameters) {
+    public RoomConnectionParameters(String roomUrl, String roomId, boolean loopback, String urlParameters) {
       this.roomUrl = roomUrl;
       this.roomId = roomId;
       this.loopback = loopback;
