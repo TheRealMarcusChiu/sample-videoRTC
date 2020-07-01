@@ -88,16 +88,11 @@ public class PeerConnectionClient {
   private static final String AUDIO_CODEC_OPUS = "opus";
   private static final String AUDIO_CODEC_ISAC = "ISAC";
   private static final String VIDEO_CODEC_PARAM_START_BITRATE = "x-google-start-bitrate";
-  private static final String VIDEO_FLEXFEC_FIELDTRIAL =
-      "WebRTC-FlexFEC-03-Advertised/Enabled/WebRTC-FlexFEC-03/Enabled/";
+  private static final String VIDEO_FLEXFEC_FIELDTRIAL = "WebRTC-FlexFEC-03-Advertised/Enabled/WebRTC-FlexFEC-03/Enabled/";
   private static final String VIDEO_VP8_INTEL_HW_ENCODER_FIELDTRIAL = "WebRTC-IntelVP8/Enabled/";
-  private static final String VIDEO_H264_HIGH_PROFILE_FIELDTRIAL =
-      "WebRTC-H264HighProfile/Enabled/";
-  private static final String DISABLE_WEBRTC_AGC_FIELDTRIAL =
-      "WebRTC-Audio-MinimizeResamplingOnMobile/Enabled/";
-  private static final String VIDEO_FRAME_EMIT_FIELDTRIAL =
-      PeerConnectionFactory.VIDEO_FRAME_EMIT_TRIAL + "/" + PeerConnectionFactory.TRIAL_ENABLED
-      + "/";
+  private static final String VIDEO_H264_HIGH_PROFILE_FIELDTRIAL = "WebRTC-H264HighProfile/Enabled/";
+  private static final String DISABLE_WEBRTC_AGC_FIELDTRIAL = "WebRTC-Audio-MinimizeResamplingOnMobile/Enabled/";
+  private static final String VIDEO_FRAME_EMIT_FIELDTRIAL = PeerConnectionFactory.VIDEO_FRAME_EMIT_TRIAL + "/" + PeerConnectionFactory.TRIAL_ENABLED + "/";
   private static final String AUDIO_CODEC_PARAM_BITRATE = "maxaveragebitrate";
   private static final String AUDIO_ECHO_CANCELLATION_CONSTRAINT = "googEchoCancellation";
   private static final String AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT = "googAutoGainControl";
@@ -304,8 +299,7 @@ public class PeerConnectionClient {
     this.options = options;
   }
 
-  public void createPeerConnectionFactory(final Context context,
-      final PeerConnectionParameters peerConnectionParameters, final PeerConnectionEvents events) {
+  public void createPeerConnectionFactory(final Context context, final PeerConnectionParameters peerConnectionParameters, final PeerConnectionEvents events) {
     this.peerConnectionParameters = peerConnectionParameters;
     this.events = events;
     videoCallEnabled = peerConnectionParameters.videoCallEnabled;
@@ -771,7 +765,6 @@ public class PeerConnectionClient {
   public void createOffer() {
     executor.execute(() -> {
       if (peerConnection != null && !isError) {
-        Log.d(TAG, "PC Create OFFER");
         isInitiator = true;
         peerConnection.createOffer(sdpObserver, sdpMediaConstraints);
       }
@@ -781,7 +774,6 @@ public class PeerConnectionClient {
   public void createAnswer() {
     executor.execute(() -> {
       if (peerConnection != null && !isError) {
-        Log.d(TAG, "PC create ANSWER");
         isInitiator = false;
         peerConnection.createAnswer(sdpObserver, sdpMediaConstraints);
       }

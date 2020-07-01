@@ -69,7 +69,25 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   @Override
   public void connectToRoom(RoomConnectionParameters connectionParameters) {
     this.connectionParameters = connectionParameters;
-    handler.post(() -> connectToRoomInternal());
+    handler.post(() -> {
+      String connectionUrl = connectionParameters.roomUrl + "/" + ROOM_JOIN + "/" + connectionParameters.roomId;
+      roomState = ConnectionState.NEW;
+      wsClient = new WebSocketChannelClient(handler, this);
+
+      RoomParametersFetcherEvents callbacks = new RoomParametersFetcherEvents() {
+        @Override
+        public void onSignalingParametersReady(final SignalingParameters params) {
+          WebSocketRTCClient.this.handler.post(() -> WebSocketRTCClient.this.signalingParametersReady(params));
+        }
+
+        @Override
+        public void onSignalingParametersError(String description) {
+          WebSocketRTCClient.this.reportError(description);
+        }
+      };
+
+      new RoomParametersFetcher(connectionUrl, null, callbacks).makeRequest();
+    });
   }
 
   @Override
@@ -81,27 +99,6 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
         handler.getLooper().quit();
       }
     });
-  }
-
-  // Connects to room - function runs on a local looper thread.
-  private void connectToRoomInternal() {
-    String connectionUrl = connectionParameters.roomUrl + "/" + ROOM_JOIN + "/" + connectionParameters.roomId + getQueryString(connectionParameters);
-    roomState = ConnectionState.NEW;
-    wsClient = new WebSocketChannelClient(handler, this);
-
-    RoomParametersFetcherEvents callbacks = new RoomParametersFetcherEvents() {
-      @Override
-      public void onSignalingParametersReady(final SignalingParameters params) {
-        WebSocketRTCClient.this.handler.post(() -> WebSocketRTCClient.this.signalingParametersReady(params));
-      }
-
-      @Override
-      public void onSignalingParametersError(String description) {
-        WebSocketRTCClient.this.reportError(description);
-      }
-    };
-
-    new RoomParametersFetcher(connectionUrl, null, callbacks).makeRequest();
   }
 
   // Disconnect from room and send bye messages - runs on a local looper thread.
@@ -117,42 +114,18 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
     }
   }
 
-  private String getMessageUrl(RoomConnectionParameters connectionParameters, SignalingParameters signalingParameters) {
-    return connectionParameters.roomUrl + "/" + ROOM_MESSAGE + "/" + connectionParameters.roomId
-        + "/" + signalingParameters.clientId + getQueryString(connectionParameters);
-  }
-
-  private String getLeaveUrl(RoomConnectionParameters connectionParameters, SignalingParameters signalingParameters) {
-    return connectionParameters.roomUrl + "/" + ROOM_LEAVE + "/" + connectionParameters.roomId + "/"
-        + signalingParameters.clientId + getQueryString(connectionParameters);
-  }
-
-  private String getQueryString(RoomConnectionParameters connectionParameters) {
-    if (connectionParameters.urlParameters != null) {
-      return "?" + connectionParameters.urlParameters;
-    } else {
-      return "";
-    }
-  }
-
-  // Callback issued when room parameters are extracted. Runs on local
-  // looper thread.
+  // Callback issued when room parameters are extracted. Runs on local looper thread
   private void signalingParametersReady(final SignalingParameters signalingParameters) {
-    Log.d(TAG, "Room connection completed.");
-    if (connectionParameters.loopback
-        && (!signalingParameters.initiator || signalingParameters.offerSdp != null)) {
+    if (connectionParameters.loopback && (!signalingParameters.initiator || signalingParameters.offerSdp != null)) {
       reportError("Loopback room is busy.");
       return;
     }
-    if (!connectionParameters.loopback && !signalingParameters.initiator
-        && signalingParameters.offerSdp == null) {
+    if (!connectionParameters.loopback && !signalingParameters.initiator && signalingParameters.offerSdp == null) {
       Log.w(TAG, "No offer SDP in room response.");
     }
     initiator = signalingParameters.initiator;
-    messageUrl = getMessageUrl(connectionParameters, signalingParameters);
-    leaveUrl = getLeaveUrl(connectionParameters, signalingParameters);
-    Log.d(TAG, "Message URL: " + messageUrl);
-    Log.d(TAG, "Leave URL: " + leaveUrl);
+    messageUrl = connectionParameters.roomUrl + "/" + ROOM_MESSAGE + "/" + connectionParameters.roomId + "/" + signalingParameters.clientId;
+    leaveUrl = connectionParameters.roomUrl + "/" + ROOM_LEAVE + "/" + connectionParameters.roomId + "/" + signalingParameters.clientId;
     roomState = ConnectionState.CONNECTED;
 
     // Fire connection and signaling parameters events.
@@ -166,23 +139,20 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   // Send local offer SDP to the other participant.
   @Override
   public void sendOfferSdp(final SessionDescription sdp) {
-    handler.post(new Runnable() {
-      @Override
-      public void run() {
-        if (roomState != ConnectionState.CONNECTED) {
-          reportError("Sending offer SDP in non connected state.");
-          return;
-        }
-        JSONObject json = new JSONObject();
-        jsonPut(json, "sdp", sdp.description);
-        jsonPut(json, "type", "offer");
-        sendPostMessage(MessageType.MESSAGE, messageUrl, json.toString());
-        if (connectionParameters.loopback) {
-          // In loopback mode rename this offer to answer and route it back.
-          SessionDescription sdpAnswer = new SessionDescription(
-              SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
-          events.onRemoteDescription(sdpAnswer);
-        }
+    handler.post(() -> {
+      if (roomState != ConnectionState.CONNECTED) {
+        reportError("Sending offer SDP in non connected state.");
+        return;
+      }
+      JSONObject json = new JSONObject();
+      jsonPut(json, "sdp", sdp.description);
+      jsonPut(json, "type", "offer");
+      sendPostMessage(MessageType.MESSAGE, messageUrl, json.toString());
+      if (connectionParameters.loopback) {
+        // In loopback mode rename this offer to answer and route it back.
+        SessionDescription sdpAnswer = new SessionDescription(
+            SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
+        events.onRemoteDescription(sdpAnswer);
       }
     });
   }
