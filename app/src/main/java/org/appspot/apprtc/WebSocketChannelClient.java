@@ -1,13 +1,3 @@
-/*
- *  Copyright 2014 The WebRTC Project Authors. All rights reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may
- *  be found in the AUTHORS file in the root of the source tree.
- */
-
 package org.appspot.apprtc;
 
 import android.os.Handler;
@@ -24,13 +14,6 @@ import org.appspot.apprtc.util.AsyncHttpURLConnection.AsyncHttpEvents;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-/**
- * WebSocket client implementation.
- *
- * <p>All public methods should be called from a looper executor thread
- * passed in a constructor, otherwise exception will be thrown.
- * All events are dispatched on the same thread.
- */
 public class WebSocketChannelClient {
   private static final String TAG = "WSChannelRTCClient";
   private static final int CLOSE_TIMEOUT = 1000;
